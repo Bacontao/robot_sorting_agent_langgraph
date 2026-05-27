@@ -2,7 +2,6 @@
 
 一个面向机器人语义分拣场景的多模态 Agent 项目。系统输入一张图片和一句自然语言指令，自动完成图像感知、任务理解、动作规划、计划审核、失败诊断、动态回退和执行命令生成。
 
-本项目适合作为机器人 Agent、视觉语言模型、LangGraph 工作流和多模态规划方向的作品集项目。
 
 ## 项目亮点
 
@@ -12,7 +11,7 @@
 - **空间关系任务支持**：支持 `left_of / right_of / above / below / near` 等相对空间关系。
 - **LangGraph 动态流程编排**：把感知、规划、审核、修复、执行适配拆成清晰节点，并支持失败后动态回退。
 - **LLM 诊断错误来源**：计划或执行出错时，由 LLM 判断是感知、意图解析、分配、步骤生成还是执行适配出了问题。
-- **可观测中间产物**：每次运行都会保存 `segmentation.json`、`object_table.json`、`plan.json`、`execution_commands.json`、`agent_trace.json` 等文件，方便调试和面试讲解。
+- **可观测中间产物**：每次运行都会保存 `segmentation.json`、`object_table.json`、`plan.json`、`execution_commands.json`、`agent_trace.json` 等文件，方便调试。
 - **离线评测体系**：提供 100 条测试用例生成和语义指标评测脚本。
 
 ## 系统流程
@@ -51,24 +50,12 @@ Execution Adapter
 convert plan to robot commands
         |
         v
-Dry Run + Feedback
+Run + Feedback
         |
         v
 Pipeline Response
 ```
 
-## 技术栈
-
-- **Python 3.11+**
-- **LangGraph**：工作流状态图和动态条件边。
-- **FastAPI**：HTTP 服务入口。
-- **Pydantic**：结构化数据模型和输入输出校验。
-- **GroundingDINO**：根据文本提示在图片中找目标框。
-- **SAM vit_b**：根据目标框生成物体 mask。
-- **YOLO segmentation**：备用图像分割后端。
-- **OpenAI-compatible API**：兼容硅基流动、vLLM、OpenAI 风格接口。
-- **Qwen/Qwen3-VL-8B-Instruct**：视觉语言理解。
-- **Qwen/Qwen2.5-14B-Instruct**：任务解析、计划审核、修复和重规划。
 
 ## 目录结构
 
@@ -78,9 +65,9 @@ Pipeline Response
 │   ├── api.py                  # FastAPI 服务入口
 │   ├── cli.py                  # 命令行入口
 │   ├── compat_langgraph.py     # LangGraph 兼容层
-│   ├── execution.py            # 执行命令生成和 dry-run
+│   ├── execution.py            # 执行命令生成和 run
 │   ├── graph.py                # 主工作流，LangGraph 节点和条件边
-│   ├── image_utils.py          # 图片路径、URL、base64 处理
+│   ├── image_utils.py          # 支持图片路径、URL、base64 处理
 │   ├── llm.py                  # LLM/VLM 调用和结构化输出修复
 │   ├── observability.py        # 中间文件写入
 │   ├── payloads.py             # 给 LLM 的 payload 压缩
@@ -93,7 +80,7 @@ Pipeline Response
 ├── scripts/
 │   ├── download_grounded_sam_models.py # 下载 GroundingDINO + SAM 模型
 │   ├── generate_eval_cases.py          # 生成评测用例
-│   ├── prepublish_check.py             # 发布前安全与卫生检查
+│   ├── prepublish_check.py             
 │   └── run_eval.py                     # 跑离线评测
 ├── samples/                    # 示例图片和请求
 ├── tests/                      # 测试用例
@@ -122,7 +109,6 @@ pip install -e '.[langgraph,dev]'
 
 ### 2. 配置环境变量
 
-不要把真实 API Key 写进 README 或代码。请复制示例文件：
 
 ```bash
 cp .env.siliconflow.example .env
@@ -134,7 +120,6 @@ cp .env.siliconflow.example .env
 OPENAI_COMPAT_API_KEY=sk-your-real-key
 ```
 
-`.env` 已经被 `.gitignore` 忽略，正常使用 Git 时不会被提交。
 
 ### 3. 下载 GroundingDINO + SAM vit_b 模型
 
@@ -157,7 +142,6 @@ python scripts/download_grounded_sam_models.py --insecure
 .models/bert-base-uncased/
 ```
 
-这些模型文件体积较大，已经在 `.gitignore` 中排除，不应上传到 GitHub。
 
 ### 4. 运行一次 CLI 测试
 
@@ -310,47 +294,6 @@ backend_usage: grounded_sam = 100
 
 详细中文评测说明见 `docs/EVALUATION_REPORT_CN.md`。
 
-## 发布到 GitHub 前检查
-
-建议每次提交前运行：
-
-```bash
-env PYTHONPATH=src .venv/bin/python scripts/prepublish_check.py
-.venv/bin/ruff check .
-.venv/bin/pytest -q
-```
-
-`prepublish_check.py` 会检查：
-
-- 是否存在 `.env`、`.models`、`artifacts` 等本地文件，并提醒它们必须保持 ignored。
-- 是否有疑似真实 API Key 被写入代码或文档。
-- 是否有大模型权重、缓存目录、Python 编译缓存等不适合提交的内容。
-
-## 面试讲解角度
-
-可以把项目讲成一个“确定性工作流 + LLM 判断能力”的机器人中间层：
-
-1. 确定性工作流保证每一步可控、可追踪。
-2. LLM 负责自然语言理解、计划审核和失败诊断。
-3. GroundingDINO + SAM 负责开放词汇物体定位和精细分割。
-4. LangGraph 负责把各模块连成状态图，并根据诊断结果动态回退。
-5. 最终输出不是一句自然语言，而是结构化机器人命令。
-
-这个设计比单纯调用一个大模型更工程化，也更适合解释“为什么失败”和“从哪里恢复”。
-
-## 当前限制
-
-- GroundingDINO + SAM 在 CPU 上速度较慢。
-- 真实机器人执行目前是 dry-run 和命令适配层，没有接机械臂控制器。
-- 开放词汇感知仍可能漏检或误识别，需要结合更多数据、提示词和后处理优化。
-- 绝对布局任务，例如“放在左边/中间/右边”，需要继续增强坐标槽位规划。
-
-## 安全说明
-
-- 不要提交 `.env`。
-- 不要提交 `.models/`、`*.pth`、`*.pt`、`*.safetensors` 等模型权重。
-- 不要在 issue、README、notebook 或截图中暴露 API Key。
-- 如果曾经把 key 提交到远程仓库，应立即在服务商后台撤销并重新生成。
 
 ## License
 
