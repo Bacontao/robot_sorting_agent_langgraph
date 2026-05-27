@@ -1,0 +1,6 @@
+{
+  "image": {
+    "image_path": "samples/yolo_bus.jpg"
+  },
+  "instruction": "Sort all detected objects to the default bin."
+}

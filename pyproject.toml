@@ -1,0 +1,33 @@
+[project]
+name = "robot-sorting-agent-langgraph"
+version = "0.1.0"
+description = "LangGraph-based multimodal agent middleware for robotic semantic sorting"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi>=0.115.0",
+  "uvicorn>=0.30.0",
+  "pydantic>=2.8.0",
+  "httpx>=0.27.0",
+  "python-dotenv>=1.0.1",
+]
+
+[project.optional-dependencies]
+vision = ["ultralytics>=8.3.0", "opencv-python>=4.10.0", "numpy>=2.0.0", "pillow>=10.0.0"]
+grounded-sam = [
+  "torch>=2.1.0",
+  "torchvision>=0.16.0",
+  "opencv-python>=4.10.0",
+  "numpy>=2.0.0",
+  "groundingdino-py>=0.4.0",
+  "segment-anything>=1.0",
+  "transformers>=4.36,<5",
+]
+langgraph = ["langgraph>=0.2.0"]
+dev = ["pytest>=8.2.0", "ruff>=0.5.0", "pillow>=10.0.0"]
+
+[project.scripts]
+robot-sorting-cli = "robot_sorting_agent.cli:main"
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]

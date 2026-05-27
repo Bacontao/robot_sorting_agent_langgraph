@@ -1,0 +1,13 @@
+{
+  "image": {
+    "image_path": "samples/demo_table.png"
+  },
+  "instruction": "Sort the red object to bin_a and the blue object to bin_b.",
+  "execution_feedback": [
+    {
+      "command_id": "cmd_002",
+      "status": "failed",
+      "reason": "grasp_failed"
+    }
+  ]
+}

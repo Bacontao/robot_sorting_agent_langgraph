@@ -1,0 +1,6 @@
+{
+  "image": {
+    "image_path": "samples/demo_table.png"
+  },
+  "instruction": "Sort the red object to bin A and the blue object to bin B."
+}
